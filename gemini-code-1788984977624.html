@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>CiboBo</title>
+    <!-- Meta tag iOS per farla sembrare un'app nativa -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="CiboBo">
+    
+    <style>
+        :root {
+            --primary: #A03472; /* Porpora Traffico */
+            --primary-light: #c25293;
+            --primary-dark: #7a2253;
+            --bg-color: #faf5f8;
+            --card-bg: #ffffff;
+            --text-main: #3a1029;
+            --text-secondary: #7e6774;
+            --border-color: #f0dbe7;
+            --danger: #ff3b30;
+            --warning: #ff9500;
+            --disabled-bg: #f7f0f4;
+            --disabled-text: #d4b5c7;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            padding: 20px 16px 40px 16px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            background: var(--card-bg);
+            padding: 16px;
+            border-radius: 20px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 4px 16px rgba(160, 52, 114, 0.05);
+        }
+
+        /* Logo SVG integrato nell'header */
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-svg {
+            width: 50px;
+            height: 50px;
+            flex-shrink: 0;
+        }
+
+        .brand-title {
+            font-size: 20px;
+            font-weight: 900;
+            line-height: 1.1;
+            color: var(--primary);
+            letter-spacing: -0.5px;
+        }
+
+        .brand-subtitle {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn-reset {
+            background-color: var(--danger);
+            color: white;
+            border: none;
+            padding: 8px 14px;
+            border-radius: 12px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        /* Banner di avviso sgarro */
+        .sgarro-banner {
+            background: #fff8e6;
+            border: 1px solid #ffeeba;
+            color: #856404;
+            padding: 12px;
+            border-radius: 12px;
+            font-size: 13px;
+            margin-bottom: 16px;
+            text-align: center;
+            font-weight: 500;
+            display: none;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+        }
+
+        .sgarro-banner.visible {
+            display: block;
+        }
+
+        .table-container {
+            background: var(--card-bg);
+            border-radius: 16px;
+            box-shadow: 0 4px 16px rgba(160, 52, 114, 0.05);
+            overflow: hidden;
+            margin-bottom: 20px;
+            border: 1px solid var(--border-color);
+        }
+
+        .row {
+            display: grid;
+            grid-template-columns: 100px 1fr 1fr;
+            border-bottom: 1px solid var(--border-color);
+            align-items: stretch;
+        }
+
+        .row:last-child {
+            border-bottom: none;
+        }
+
+        .header-row {
+            background-color: #f7edf3;
+            font-weight: 600;
+            font-size: 13px;
+            color: var(--primary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .cell {
+            padding: 12px 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            font-size: 14px;
+            border-right: 1px solid var(--border-color);
+        }
+
+        .cell:last-child {
+            border-right: none;
+        }
+
+        .day-cell {
+            font-weight: 600;
+            background-color: #fcf8fa;
+            color: var(--text-main);
+        }
+
+        .meal-cell {
+            cursor: pointer;
+            min-height: 54px;
+            transition: background-color 0.2s;
+            user-select: none;
+            font-weight: 500;
+            color: var(--primary);
+            padding: 6px;
+        }
+
+        .meal-cell.sgarro {
+            color: var(--warning);
+            font-weight: 600;
+        }
+
+        .meal-cell:active {
+            background-color: #f2e3ed;
+        }
+
+        .meal-cell.empty {
+            color: var(--text-secondary);
+            font-weight: 400;
+            font-style: italic;
+            font-size: 13px;
+        }
+
+        /* Sezione Contatori */
+        .counters-container {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 16px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 4px 16px rgba(160, 52, 114, 0.05);
+        }
+
+        .counters-container h3 {
+            font-size: 15px;
+            margin-bottom: 12px;
+            color: var(--primary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .counter-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #fcf8fa;
+            font-size: 14px;
+        }
+
+        .counter-item:last-child {
+            border-bottom: none;
+        }
+
+        .counter-badge {
+            font-weight: 600;
+            padding: 2px 8px;
+            border-radius: 8px;
+            background: #f7edf3;
+            color: var(--primary);
+            font-size: 13px;
+        }
+
+        .counter-badge.limit-reached {
+            background: #ffdad6;
+            color: var(--danger);
+        }
+
+        .counter-badge.warning-reached {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        /* Modale / Popup */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(58, 16, 41, 0.4);
+            backdrop-filter: blur(4px);
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            z-index: 1000;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-sheet {
+            background: #fff;
+            width: 100%;
+            max-width: 600px;
+            border-top-left-radius: 24px;
+            border-top-right-radius: 24px;
+            padding: 20px 16px 40px 16px;
+            transform: translateY(100%);
+            transition: transform 0.3s cubic-bezier(0.1, 1, 0.1, 1);
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-overlay.active .modal-sheet {
+            transform: translateY(0);
+        }
+
+        .modal-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            text-align: center;
+            color: var(--primary);
+        }
+
+        .option-btn {
+            width: 100%;
+            padding: 14px;
+            margin-bottom: 8px;
+            border: 1px solid var(--border-color);
+            background: #fff;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 500;
+            text-align: left;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .option-btn.sgarro-opt {
+            border-color: #ffeeba;
+            background-color: #fffdf5;
+            color: #b07d00;
+        }
+
+        .option-btn:active:not(:disabled) {
+            background: #fcf8fa;
+        }
+
+        .option-btn:disabled {
+            background-color: var(--disabled-bg);
+            color: var(--disabled-text);
+            border-color: transparent;
+            cursor: not-allowed;
+        }
+
+        .option-count {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .btn-clear-slot {
+            color: var(--danger);
+            border-color: #ffd8d6;
+        }
+
+        .btn-close {
+            width: 100%;
+            padding: 14px;
+            margin-top: 8px;
+            border: none;
+            background: #f7edf3;
+            color: var(--primary);
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo-container">
+            <!-- Logo SVG integrato: La cloche sopra, il piatto con faccina sotto -->
+            <svg class="logo-svg" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="50" cy="50" r="48" fill="#A03472"/>
+                <!-- Cloche stilizzata (rappresenta la prima o) -->
+                <ellipse cx="50" cy="38" rx="16" ry="4" fill="#fff"/>
+                <path d="M38 38 C38 20, 62 20, 62 38 Z" fill="#fff"/>
+                <circle cx="50" cy="16" r="3" fill="#ffd166"/>
+                <!-- Piatto con faccina (rappresenta la seconda o) -->
+                <circle cx="50" cy="72" r="18" fill="none" stroke="#fff" stroke-width="4"/>
+                <circle cx="50" cy="72" r="12" fill="#fff"/>
+                <!-- Faccina dinamica nell'icona -->
+                <g id="logo-face">
+                    <circle cx="44" cy="68" r="1.5" fill="#A03472"/>
+                    <circle cx="56" cy="68" r="1.5" fill="#A03472"/>
+                    <path id="logo-mouth" d="M 45 74 Q 50 79 55 74" fill="none" stroke="#A03472" stroke-width="2" stroke-linecap="round"/>
+                </g>
+            </svg>
+            <div>
+                <div class="brand-title">CiboBo</div>
+                <div class="brand-subtitle">Smart Tracker</div>
+            </div>
+        </div>
+        <button class="btn-reset" onclick="resetWeek()">Nuova Settimana</button>
+    </header>
+
+    <div class="sgarro-banner" id="sgarro-banner">
+        ⚠️ Ehi! Stai esagerando con i pasti sgarro questa settimana! La bilancia sta già tremando... 🤭
+    </div>
+
+    <div class="table-container" id="schedule-table">
+        <!-- Generato via JavaScript -->
+    </div>
+
+    <div class="counters-container">
+        <h3>Frequenze Settimanali</h3>
+        <div id="counters-list">
+            <!-- Generato via JavaScript -->
+        </div>
+    </div>
+
+    <!-- Modale Selezione -->
+    <div class="modal-overlay" id="modal" onclick="closeModal(event)">
+        <div class="modal-sheet" onclick="event.stopPropagation()">
+            <div class="modal-title" id="modal-title">Seleziona Pasto</div>
+            <div id="options-container"></div>
+            <button class="btn-close" onclick="closeModalDirect()">Chiudi</button>
+        </div>
+    </div>
+
+    <script>
+        const days = ['Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato', 'Domenica'];
+        const meals = ['pranzo', 'cena'];
+        
+        const proteinOptions = [
+            { name: 'Carne Rossa', limit: 1, type: 'normal' },
+            { name: 'Carne Bianca', limit: 3, type: 'normal' },
+            { name: 'Uova', limit: 1, type: 'normal' },
+            { name: 'Legumi', limit: 3, type: 'normal' },
+            { name: 'Pesce', limit: 3, type: 'normal' },
+            { name: 'Pesce in scatola', limit: 1, type: 'normal' },
+            { name: 'Formaggi', limit: 2, type: 'normal' },
+            { name: 'Affettati', limit: 1, type: 'normal' },
+            { name: 'Pasto Sgarro', limit: 2, type: 'flexible' }
+        ];
+
+        let schedule = JSON.parse(localStorage.getItem('cibobo_schedule')) || {};
+        let activeSlot = null;
+
+        function saveData() {
+            localStorage.setItem('cibobo_schedule', JSON.stringify(schedule));
+        }
+
+        function renderTable() {
+            const container = document.getElementById('schedule-table');
+            let html = `
+                <div class="row header-row">
+                    <div class="cell">Giorno</div>
+                    <div class="cell">Pranzo</div>
+                    <div class="cell">Cena</div>
+                </div>
+            `;
+
+            days.forEach(day => {
+                html += `<div class="row">
+                    <div class="cell day-cell">${day}</div>`;
+                
+                meals.forEach(meal => {
+                    const key = `${day}_${meal}`;
+                    const val = schedule[key];
+                    const displayVal = val ? val : 'Seleziona...';
+                    let customClass = val ? 'meal-cell' : 'meal-cell empty';
+                    if (val === 'Pasto Sgarro') customClass += ' sgarro';
+                    
+                    html += `<div class="cell ${customClass}" onclick="openModal('${day}', '${meal}')">${displayVal}</div>`;
+                });
+
+                html += `</div>`;
+            });
+
+            container.innerHTML = html;
+            renderCounters();
+            checkSgarroWarning();
+        }
+
+        function getUsageCounts() {
+            const counts = {};
+            proteinOptions.forEach(opt => counts[opt.name] = 0);
+            
+            Object.values(schedule).forEach(val => {
+                if (counts[val] !== undefined) {
+                    counts[val]++;
+                }
+            });
+            return counts;
+        }
+
+        function checkSgarroWarning() {
+            const counts = getUsageCounts();
+            const sgarroCount = counts['Pasto Sgarro'] || 0;
+            const banner = document.getElementById('sgarro-banner');
+            const mouth = document.getElementById('logo-mouth');
+            
+            if (sgarroCount > 2) {
+                banner.classList.add('visible');
+                // La faccina nel logo diventa TRISTE (bocca rivolta all'ingiù)
+                if (mouth) mouth.setAttribute('d', 'M 45 77 Q 50 72 55 77');
+            } else {
+                banner.classList.remove('visible');
+                // La faccina nel logo torna FELICE (sorriso)
+                if (mouth) mouth.setAttribute('d', 'M 45 74 Q 50 79 55 74');
+            }
+        }
+
+        function renderCounters() {
+            const counts = getUsageCounts();
+            const container = document.getElementById('counters-list');
+            let html = '';
+
+            proteinOptions.forEach(opt => {
+                const current = counts[opt.name];
+                let badgeClass = '';
+                
+                if (opt.type === 'normal' && current >= opt.limit) {
+                    badgeClass = 'limit-reached';
+                } else if (opt.type === 'flexible' && current > opt.limit) {
+                    badgeClass = 'warning-reached';
+                }
+
+                html += `
+                    <div class="counter-item">
+                        <span>${opt.name} ${opt.type === 'flexible' ? '(consigliati max ' + opt.limit + ')' : ''}</span>
+                        <span class="counter-badge ${badgeClass}">${current} / ${opt.limit}</span>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
+        function openModal(day, meal) {
+            activeSlot = { day, meal };
+            document.getElementById('modal-title').innerText = `${day} - ${meal.toUpperCase()}`;
+            
+            const counts = getUsageCounts();
+            const container = document.getElementById('options-container');
+            let html = '';
+
+            const currentVal = schedule[`${day}_${meal}`];
+            if (currentVal) {
+                html += `<button class="option-btn btn-clear-slot" onclick="selectOption('')">Rimuovi scelta attuale</button>`;
+            }
+
+            proteinOptions.forEach(opt => {
+                const currentCount = counts[opt.name];
+                const isAlreadyHere = (currentVal === opt.name);
+                const effectiveCount = isAlreadyHere ? currentCount - 1 : currentCount;
+                
+                const isDisabled = (opt.type === 'normal') && (effectiveCount >= opt.limit);
+
+                html += `
+                    <button class="option-btn ${opt.type === 'flexible' ? 'sgarro-opt' : ''}" ${isDisabled ? 'disabled' : ''} onclick="selectOption('${opt.name}')">
+                        <span>${opt.name}</span>
+                        <span class="option-count">${currentCount}/${opt.limit}</span>
+                    </button>
+                `;
+            });
+
+            container.innerHTML = html;
+            document.getElementById('modal').classList.add('active');
+        }
+
+        function selectOption(value) {
+            if (!activeSlot) return;
+            const key = `${activeSlot.day}_${activeSlot.meal}`;
+            if (value === '') {
+                delete schedule[key];
+            } else {
+                schedule[key] = value;
+            }
+            saveData();
+            closeModalDirect();
+            renderTable();
+        }
+
+        function closeModal(event) {
+            if (event.target.id === 'modal') {
+                closeModalDirect();
+            }
+        }
+
+        function closeModalDirect() {
+            document.getElementById('modal').classList.remove('active');
+            activeSlot = null;
+        }
+
+        function resetWeek() {
+            if (confirm("Vuoi azzerare tutta la programmazione della settimana?")) {
+                schedule = {};
+                saveData();
+                renderTable();
+            }
+        }
+
+        renderTable();
+    </script>
+</body>
+</html>
