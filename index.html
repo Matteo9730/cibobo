@@ -37,8 +37,20 @@
             background-color: var(--bg-color);
             color: var(--text-main);
             padding: 20px 16px 40px 16px;
+            padding-top: calc(20px + env(safe-area-inset-top, 0px));
+            padding-right: calc(16px + env(safe-area-inset-right, 0px));
+            padding-bottom: calc(40px + env(safe-area-inset-bottom, 0px));
+            padding-left: calc(16px + env(safe-area-inset-left, 0px));
             max-width: 600px;
             margin: 0 auto;
+        }
+
+        @media (max-width: 600px) {
+            body {
+                /* Fascia libera sopra il logo, anche se il browser non espone la safe area. */
+                padding-top: 60px;
+                padding-top: max(60px, calc(20px + env(safe-area-inset-top, 0px)));
+            }
         }
 
         header {
@@ -249,6 +261,7 @@
             pointer-events: none;
             transition: opacity 0.3s ease;
             z-index: 1000;
+            padding-top: env(safe-area-inset-top, 0px);
         }
 
         .modal-overlay.active {
@@ -263,9 +276,13 @@
             border-top-left-radius: 24px;
             border-top-right-radius: 24px;
             padding: 20px 16px 40px 16px;
+            padding-right: calc(16px + env(safe-area-inset-right, 0px));
+            padding-bottom: calc(40px + env(safe-area-inset-bottom, 0px));
+            padding-left: calc(16px + env(safe-area-inset-left, 0px));
             transform: translateY(100%);
             transition: transform 0.3s cubic-bezier(0.1, 1, 0.1, 1);
             max-height: 80vh;
+            max-height: min(80dvh, calc(100dvh - env(safe-area-inset-top, 0px)));
             overflow-y: auto;
         }
 
@@ -516,13 +533,10 @@
 
             proteinOptions.forEach(opt => {
                 const currentCount = counts[opt.name];
-                const isAlreadyHere = (currentVal === opt.name);
-                const effectiveCount = isAlreadyHere ? currentCount - 1 : currentCount;
-                
-                const isDisabled = (opt.type === 'normal') && (effectiveCount >= opt.limit);
+                // Le frequenze sono un riferimento: tutte le categorie restano selezionabili.
 
                 html += `
-                    <button class="option-btn ${opt.type === 'flexible' ? 'sgarro-opt' : ''}" ${isDisabled ? 'disabled' : ''} onclick="selectOption('${opt.name}')">
+                    <button class="option-btn ${opt.type === 'flexible' ? 'sgarro-opt' : ''}" onclick="selectOption('${opt.name}')">
                         <span>${opt.name}</span>
                         <span class="option-count">${currentCount}/${opt.limit}</span>
                     </button>
