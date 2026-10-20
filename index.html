@@ -10,7 +10,7 @@
     <meta name="theme-color" content="#A03472">
     <!-- Meta tag iOS per farla sembrare un'app nativa -->
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="CiboBo">
     
     <style>
@@ -581,7 +581,7 @@
                 count.textContent = `${currentCount}/${opt.limit}`;
                 button.append(label, count);
                 // Ogni pulsante salva il proprio valore, senza indici o coordinate.
-                button.addEventListener('click', () => selectOption(opt.name));
+                bindOptionSelection(button, opt.name);
                 container.append(button);
             });
 
@@ -590,11 +590,40 @@
             clearButton.className = 'option-btn btn-clear-slot';
             clearButton.textContent = 'Rimuovi scelta attuale';
             clearButton.disabled = !currentVal;
-            clearButton.addEventListener('click', () => selectOption(''));
+            bindOptionSelection(clearButton, '');
             container.append(clearButton);
             document.documentElement.classList.add('modal-open');
             document.getElementById('modal').showModal();
             document.querySelector('.modal-sheet').scrollTop = 0;
+        }
+
+        function bindOptionSelection(button, value) {
+            let press = null;
+            button.addEventListener('pointerdown', event => {
+                if (!event.isPrimary || event.button !== 0 || button.disabled) return;
+                press = { id: event.pointerId, x: event.clientX, y: event.clientY };
+                button.setPointerCapture(event.pointerId);
+            });
+            button.addEventListener('pointermove', event => {
+                if (press && press.id === event.pointerId &&
+                    Math.hypot(event.clientX - press.x, event.clientY - press.y) > 10) {
+                    press = null;
+                }
+            });
+            button.addEventListener('pointercancel', () => { press = null; });
+            button.addEventListener('lostpointercapture', () => { press = null; });
+            button.addEventListener('pointerup', event => {
+                const startedHere = press && press.id === event.pointerId;
+                press = null;
+                if (!startedHere || button.disabled) return;
+                event.preventDefault();
+                selectOption(value);
+            });
+            button.addEventListener('click', event => {
+                // I tocchi sono gestiti sopra: non applicare il click sintetico di iOS.
+                event.preventDefault();
+                if (event.detail === 0 && !button.disabled) selectOption(value);
+            });
         }
 
         function selectOption(value) {
