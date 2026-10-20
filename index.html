@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>CiboBo</title>
+    <link rel="icon" type="image/png" href="icons/icon-192.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
+    <link rel="manifest" href="manifest.webmanifest">
+    <meta name="theme-color" content="#A03472">
     <!-- Meta tag iOS per farla sembrare un'app nativa -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -190,6 +194,24 @@
 
         .meal-cell:active {
             background-color: #f2e3ed;
+        }
+
+        .meal-cell.over-limit,
+        .counter-item.over-limit,
+        .option-btn.over-limit {
+            background-color: #f0dbe7;
+            color: var(--primary-dark);
+        }
+
+        .counter-item.over-limit {
+            border-radius: 8px;
+            padding-left: 8px;
+            padding-right: 8px;
+        }
+
+        .counter-item.over-limit .counter-badge {
+            background: var(--primary);
+            color: #fff;
         }
 
         .meal-cell.empty {
@@ -433,6 +455,7 @@
 
         function renderTable() {
             const container = document.getElementById('schedule-table');
+            const counts = getUsageCounts();
             let html = `
                 <div class="row header-row">
                     <div class="cell">Giorno</div>
@@ -451,6 +474,8 @@
                     const displayVal = val ? val : 'Seleziona...';
                     let customClass = val ? 'meal-cell' : 'meal-cell empty';
                     if (val === 'Pasto Sgarro') customClass += ' sgarro';
+                    const option = proteinOptions.find(opt => opt.name === val);
+                    if (option && counts[val] > option.limit) customClass += ' over-limit';
                     
                     html += `<div class="cell ${customClass}" onclick="openModal('${day}', '${meal}')">${displayVal}</div>`;
                 });
@@ -508,7 +533,7 @@
                 }
 
                 html += `
-                    <div class="counter-item">
+                    <div class="counter-item ${current > opt.limit ? 'over-limit' : ''}">
                         <span>${opt.name} ${opt.type === 'flexible' ? '(consigliati max ' + opt.limit + ')' : ''}</span>
                         <span class="counter-badge ${badgeClass}">${current} / ${opt.limit}</span>
                     </div>
@@ -536,7 +561,7 @@
                 // Le frequenze sono un riferimento: tutte le categorie restano selezionabili.
 
                 html += `
-                    <button class="option-btn ${opt.type === 'flexible' ? 'sgarro-opt' : ''}" onclick="selectOption('${opt.name}')">
+                    <button class="option-btn ${opt.type === 'flexible' ? 'sgarro-opt' : ''} ${currentCount > opt.limit ? 'over-limit' : ''}" onclick="selectOption('${opt.name}')">
                         <span>${opt.name}</span>
                         <span class="option-count">${currentCount}/${opt.limit}</span>
                     </button>
