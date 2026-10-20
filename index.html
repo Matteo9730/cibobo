@@ -199,8 +199,13 @@
         .meal-cell.over-limit,
         .counter-item.over-limit,
         .option-btn.over-limit {
-            background-color: #f0dbe7;
+            background-color: #e8bfd7;
             color: var(--primary-dark);
+        }
+
+        .meal-cell.over-limit {
+            box-shadow: inset 0 0 0 2px var(--primary);
+            font-weight: 700;
         }
 
         .counter-item.over-limit {
@@ -278,23 +283,20 @@
 
         .modal-overlay {
             position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(58, 16, 41, 0.4);
-            backdrop-filter: blur(4px);
-            display: flex;
-            justify-content: center;
-            align-items: flex-end;
-            opacity: 0;
-            visibility: hidden;
-            pointer-events: none;
-            z-index: 1000;
-            padding-top: env(safe-area-inset-top, 0px);
+            inset: auto 0 0;
+            width: 100%;
+            max-width: 600px;
+            max-height: calc(100% - env(safe-area-inset-top, 0px));
+            margin: auto auto 0;
+            padding: 0;
+            border: 0;
+            border-radius: 24px 24px 0 0;
+            background: #fff;
+            color: var(--text-main);
         }
 
-        .modal-overlay.active {
-            opacity: 1;
-            visibility: visible;
-            pointer-events: auto;
+        .modal-overlay::backdrop {
+            background: rgba(58, 16, 41, 0.4);
         }
 
         .modal-sheet {
@@ -345,6 +347,19 @@
 
         .option-btn:active:not(:disabled) {
             background: #fcf8fa;
+        }
+
+        .option-btn.over-limit {
+            background: #e8bfd7;
+            color: var(--primary-dark);
+        }
+
+        .option-btn[aria-pressed="true"] {
+            border: 2px solid var(--primary);
+        }
+
+        .option-btn {
+            touch-action: manipulation;
         }
 
         .option-btn:disabled {
@@ -423,13 +438,13 @@
     </div>
 
     <!-- Modale Selezione -->
-    <div class="modal-overlay" id="modal" onclick="closeModal(event)">
+    <dialog class="modal-overlay" id="modal" onclick="closeModal(event)" aria-labelledby="modal-title">
         <div class="modal-sheet" onclick="event.stopPropagation()">
             <div class="modal-title" id="modal-title">Seleziona Pasto</div>
             <div id="options-container"></div>
             <button class="btn-close" onclick="closeModalDirect()">Chiudi</button>
         </div>
-    </div>
+    </dialog>
 
     <script>
         const days = ['Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato', 'Domenica'];
@@ -550,29 +565,36 @@
             
             const counts = getUsageCounts();
             const container = document.getElementById('options-container');
-            let html = '';
-
             const currentVal = schedule[`${day}_${meal}`];
-            if (currentVal) {
-                html += `<button class="option-btn btn-clear-slot" onclick="selectOption('')">Rimuovi scelta attuale</button>`;
-            }
+            container.replaceChildren();
 
             proteinOptions.forEach(opt => {
                 const currentCount = counts[opt.name];
-                // Le frequenze sono un riferimento: tutte le categorie restano selezionabili.
-
-                html += `
-                    <button class="option-btn ${opt.type === 'flexible' ? 'sgarro-opt' : ''} ${currentCount > opt.limit ? 'over-limit' : ''}" onclick="selectOption('${opt.name}')">
-                        <span>${opt.name}</span>
-                        <span class="option-count">${currentCount}/${opt.limit}</span>
-                    </button>
-                `;
+                const button = document.createElement('button');
+                button.type = 'button';
+                button.className = `option-btn ${opt.type === 'flexible' ? 'sgarro-opt' : ''} ${currentCount > opt.limit ? 'over-limit' : ''}`;
+                button.setAttribute('aria-pressed', String(currentVal === opt.name));
+                const label = document.createElement('span');
+                label.textContent = opt.name;
+                const count = document.createElement('span');
+                count.className = 'option-count';
+                count.textContent = `${currentCount}/${opt.limit}`;
+                button.append(label, count);
+                // Ogni pulsante salva il proprio valore, senza indici o coordinate.
+                button.addEventListener('click', () => selectOption(opt.name));
+                container.append(button);
             });
 
-            container.innerHTML = html;
-            document.querySelector('.modal-sheet').scrollTop = 0;
+            const clearButton = document.createElement('button');
+            clearButton.type = 'button';
+            clearButton.className = 'option-btn btn-clear-slot';
+            clearButton.textContent = 'Rimuovi scelta attuale';
+            clearButton.disabled = !currentVal;
+            clearButton.addEventListener('click', () => selectOption(''));
+            container.append(clearButton);
             document.documentElement.classList.add('modal-open');
-            document.getElementById('modal').classList.add('active');
+            document.getElementById('modal').showModal();
+            document.querySelector('.modal-sheet').scrollTop = 0;
         }
 
         function selectOption(value) {
@@ -595,10 +617,15 @@
         }
 
         function closeModalDirect() {
-            document.getElementById('modal').classList.remove('active');
+            document.getElementById('modal').close();
             document.documentElement.classList.remove('modal-open');
             activeSlot = null;
         }
+
+        document.getElementById('modal').addEventListener('close', () => {
+            document.documentElement.classList.remove('modal-open');
+            activeSlot = null;
+        });
 
         function resetWeek() {
             if (confirm("Vuoi azzerare tutta la programmazione della settimana?")) {
